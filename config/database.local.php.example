@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+/** Copie para database.local.php e ajuste (arquivo ignorado pelo git). */
+return [
+    'host' => '127.0.0.1',
+    'port' => 3306,
+    'database' => 'oficina_estoque',
+    'username' => 'root',
+    'password' => 'SUA_SENHA_MYSQL_AQUI',
+];

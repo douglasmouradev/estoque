@@ -1,0 +1,15 @@
+/vendor/
+!.gitignore
+!vendor/autoload.php
+.env
+config/database.local.php
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/pdfs/*
+!/storage/pdfs/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+composer.phar
+composer-setup.php
+.phpunit.result.cache
+.phpunit.cache

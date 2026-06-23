@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS veiculos (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT UNSIGNED NOT NULL,
+    placa VARCHAR(10) NOT NULL,
+    chassi VARCHAR(30) NULL,
+    marca VARCHAR(60) NOT NULL,
+    modelo VARCHAR(80) NOT NULL,
+    ano SMALLINT UNSIGNED NULL,
+    cor VARCHAR(40) NULL,
+    km_atual INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    created_by INT UNSIGNED NULL,
+    UNIQUE KEY uk_veiculos_placa (placa),
+    KEY idx_veiculos_cliente (cliente_id),
+    KEY idx_veiculos_deleted (deleted_at),
+    CONSTRAINT fk_veiculos_cliente FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_veiculos_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(160) NOT NULL,
+    cpf_cnpj VARCHAR(18) NOT NULL,
+    telefone VARCHAR(20) NULL,
+    email VARCHAR(180) NULL,
+    logradouro VARCHAR(160) NULL,
+    numero VARCHAR(20) NULL,
+    complemento VARCHAR(80) NULL,
+    bairro VARCHAR(80) NULL,
+    cidade VARCHAR(80) NULL,
+    uf CHAR(2) NULL,
+    cep VARCHAR(10) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    created_by INT UNSIGNED NULL,
+    UNIQUE KEY uk_clientes_cpf_cnpj (cpf_cnpj),
+    KEY idx_clientes_nome (nome),
+    KEY idx_clientes_deleted (deleted_at),
+    CONSTRAINT fk_clientes_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
