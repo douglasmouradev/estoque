@@ -25,7 +25,7 @@ enum PerfilUsuario: string
         return match ($this) {
             self::Admin => [],
             self::Gerente => ['/config'],
-            self::Mecanico => ['/config', '/orcamentos', '/clientes', '/relatorios'],
+            self::Mecanico => ['/config', '/orcamentos', '/clientes', '/relatorios', '/auditoria', '/financeiro'],
         };
     }
 }

@@ -1,0 +1,71 @@
+openapi: 3.0.3
+info:
+  title: Oficina Estoque API
+  version: 1.0.0
+  description: API JSON do sistema de estoque e orçamentos
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /orcamentos:
+    get:
+      summary: Listar orçamentos
+      security: [{ session: [] }]
+    post:
+      summary: Criar orçamento
+  /orcamentos/{id}:
+    get:
+      summary: Detalhe do orçamento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+  /orcamentos/{id}/enviar:
+    post:
+      summary: Enviar orçamento ao cliente
+  /os:
+    get:
+      summary: Listar ordens de serviço
+  /os/{id}:
+    get:
+      summary: Detalhe da OS
+  /estoque/autocomplete:
+    get:
+      summary: Autocomplete de peças
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+  /servicos/todos:
+    get:
+      summary: Catálogo de serviços
+  /busca:
+    get:
+      summary: Busca global
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+  /veiculos/{id}/historico:
+    get:
+      summary: Histórico do veículo
+  /financeiro:
+    get:
+      summary: Contas a receber
+  /portal/orcamento/{token}:
+    get:
+      summary: Portal público do orçamento
+      security: []
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: oficina_session

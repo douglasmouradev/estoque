@@ -42,6 +42,15 @@ final class Response
         exit;
     }
 
+    public static function downloadString(string $content, string $filename, string $mime = 'text/plain'): never
+    {
+        header('Content-Type: ' . $mime);
+        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+        header('Content-Length: ' . (string) strlen($content));
+        echo $content;
+        exit;
+    }
+
     public static function noContent(int $status = 204): never
     {
         http_response_code($status);

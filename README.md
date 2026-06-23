@@ -4,43 +4,58 @@ PHP 8.3 + MySQL 8, MVC artesanal, frontend HTML/CSS/JS vanilla.
 
 ## Requisitos
 
-- PHP 8.3+ (extensões: pdo_mysql, json, mbstring, gd ou imagick para Dompdf)
+- PHP 8.3+ (pdo_mysql, json, mbstring, gd)
 - MySQL 8.0+
 - Composer
-- Apache com `mod_rewrite` (ou servidor embutido apontando para `public/`)
 
 ## Instalação
 
 ```bash
-cd C:\Users\Douglas\Desktop\Projetos\estoque
 composer install
 copy .env.example .env
-```
-
-Edite `.env` com credenciais do MySQL e crie o banco:
-
-```sql
-CREATE DATABASE oficina_estoque CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Execute as migrations:
-
-```bash
 php bin/migrate.php
+cd public && php -S localhost:8080 router.php
 ```
 
-Servidor de desenvolvimento:
+**Login:** `admin@oficina.local` / `admin123`
+
+## Módulos
+
+| Módulo | Rota | Descrição |
+|--------|------|-----------|
+| Estoque | `/estoque` | Peças, CSV, alertas |
+| Orçamentos | `/orcamentos` | Versionamento, e-mail, portal |
+| OS | `/os` | Itens, financeiro, portal cliente |
+| Financeiro | `/financeiro` | Contas a receber, export CSV |
+| Relatórios | `/relatorios` | KPIs, gráficos, export |
+| Auditoria | `/auditoria` | Log de ações |
+| Serviços | `/servicos` | Catálogo com autocomplete |
+| Portal | `/portal/*` | Cliente aprova orçamento / acompanha OS |
+| API Docs | `/api/docs` | OpenAPI + Swagger UI |
+
+## E-mail
+
+Configure no `.env`:
+
+```
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.seudominio.com
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM=noreply@oficina.local
+```
+
+Em desenvolvimento use `MAIL_DRIVER=log` (grava em `storage/logs`).
+
+## Scripts úteis
 
 ```bash
-cd public
-php -S localhost:8080 router.php
+php bin/migrate.php              # migrations
+php bin/backup.php               # backup MySQL
+php bin/process-notifications.php # fila de e-mails
+composer test                    # PHPUnit
 ```
-
-Ou na raiz: `composer serve`
-
-Acesse: http://localhost:8080
-
-**Login padrão:** `admin@oficina.local` / `admin123` (troca obrigatória no primeiro acesso)
 
 ## Docker
 
@@ -48,68 +63,17 @@ Acesse: http://localhost:8080
 docker compose up -d
 ```
 
-App em http://localhost:8080 — MySQL na porta 3306.
+Migrations rodam automaticamente no startup.
 
-## Módulos
+## Segurança
 
-| Módulo | Descrição |
-|--------|-----------|
-| Estoque | Peças, movimentações, CSV, alertas de mínimo |
-| Orçamentos | Versionamento, envio, portal do cliente, reserva de estoque |
-| OS | Itens avulsos, checklist, horas, financeiro |
-| Serviços | Catálogo de serviços reutilizáveis |
-| Relatórios | Dashboard operacional e financeiro |
-| Busca global | Clientes, placas, peças e OS no header |
-
-## Portal do cliente
-
-Ao enviar um orçamento, o sistema gera um link público (`/portal/orcamento/{token}`) válido por 30 dias. O cliente pode aprovar ou reprovar sem login.
-
-Configure `APP_URL` no `.env` para links corretos em produção.
-
-## Variáveis `.env` importantes
-
-| Variável | Uso |
-|----------|-----|
-| `APP_URL` | Base dos links do portal |
-| `APP_DEBUG` | `false` em produção |
-| `APP_AUTO_CREATE_DB` | `false` em produção |
-| `DB_*` | Conexão MySQL |
-
-## Health check
-
-`GET /health` — retorna status da aplicação e do banco (útil para Docker/CI).
-
-## Testes
-
-```bash
-composer test
-```
-
-## Estrutura
-
-- `public/` — document root
-- `src/Core/` — Router, DB, Auth, Events, Security
-- `src/Services/` — regras de negócio (Orçamento, Financeiro, Relatórios, PDF)
-- `src/Models/` — PDO
-- `migrations/` — SQL numerado (001–017)
-- `storage/` — PDFs, uploads, logs
-
-## Perfis
-
-| Perfil   | Acesso                                      |
-|----------|---------------------------------------------|
-| admin    | Tudo, incluindo `/config` e usuários        |
-| gerente  | Tudo exceto configurações                   |
-| mecânico | OS + estoque (leitura), sem orçamentos/relatórios |
-
-## CSV de peças
-
-Separador `;`, cabeçalho: `codigo_interno;descricao;unidade;codigo_oem;marca;localizacao;estoque_minimo;preco_venda;estoque_inicial`
+- CSP, HSTS (HTTPS), rate limit login/portal
+- Recuperação de senha por e-mail
+- CSRF, auditoria, permissões por perfil
 
 ## Produção
 
-- `APP_DEBUG=false` e `APP_AUTO_CREATE_DB=false`
-- HTTPS (cookie `secure` ativado automaticamente)
-- Rate limit no login
-- Headers de segurança via `SecurityHeaders`
+- `APP_DEBUG=false`, `APP_AUTO_CREATE_DB=false`
+- HTTPS obrigatório para cookies secure
+- Cron: `php bin/process-notifications.php` a cada minuto
+- Cron: `php bin/backup.php` diário

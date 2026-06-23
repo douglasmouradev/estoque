@@ -21,11 +21,25 @@
         itens.forEach((v) => {
             html += `<tr><td>${escapeHtml(v.placa)}</td><td>${escapeHtml(v.marca)}</td>
                 <td>${escapeHtml(v.modelo)}</td><td>${v.km_atual}</td>
-                <td>${pode ? `<button class="btn btn-sm btn-ghost" data-edit-v="${v.id}">Editar</button>
-                <button class="btn btn-sm btn-ghost" data-del-v="${v.id}">Excluir</button>` : ''}</td></tr>`;
+                <td>
+                    <button class="btn btn-sm btn-ghost" data-hist-v="${v.id}" data-placa="${escapeHtml(v.placa)}">Histórico</button>
+                    ${pode ? `<button class="btn btn-sm btn-ghost" data-edit-v="${v.id}">Editar</button>
+                <button class="btn btn-sm btn-ghost" data-del-v="${v.id}">Excluir</button>` : ''}
+                </td></tr>`;
         });
         html += '</tbody></table></div>';
         el.innerHTML = html;
+        el.querySelectorAll('[data-hist-v]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const r = await API.get(`/veiculos/${btn.dataset.histV}/historico`);
+                const rows = r.dados || [];
+                const linhas = rows.map((h) => {
+                    const tipo = h.tipo === 'os' ? 'OS' : 'Orçamento';
+                    return `${Format.dataHora(h.created_at)} — ${tipo} #${h.numero} (${h.status})`;
+                });
+                UI.relatorio(`Histórico — ${btn.dataset.placa}`, linhas);
+            });
+        });
         el.querySelectorAll('[data-edit-v]').forEach((btn) => {
             btn.addEventListener('click', async () => {
                 const vid = btn.dataset.editV;

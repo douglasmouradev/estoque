@@ -74,6 +74,8 @@
 
             <button type="submit" class="btn btn-primary" style="width:100%;margin-top:0.25rem">Acessar sistema</button>
 
+            <p style="margin-top:0.75rem;text-align:center;font-size:0.85rem"><a href="/esqueci-senha">Esqueci minha senha</a></p>
+
         </form>
 
     </div>

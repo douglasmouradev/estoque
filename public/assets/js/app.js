@@ -51,3 +51,7 @@ document.getElementById('menu-toggle')?.addEventListener('click', () => {
 document.querySelector('.sidebar-backdrop')?.addEventListener('click', () => {
     document.body.classList.remove('sidebar-open');
 });
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}

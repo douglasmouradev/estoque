@@ -61,6 +61,8 @@ final class OrdemServicoController extends Controller
             $os['pode_finalizar'] = Auth::perfil() !== PerfilUsuario::Mecanico;
             $os['pode_editar_itens'] = Auth::perfil() !== PerfilUsuario::Mecanico
                 && !in_array($os['status'], ['finalizada', 'cancelada'], true);
+            $os['link_portal'] = OrdemServico::linkPortal($id);
+            $os['pagamentos'] = FinanceiroService::pagamentosOs($id);
             $this->jsonOk($os);
         }
         $this->view('os/show', ['titulo' => 'OS #' . $os['numero'], 'osId' => $id]);
@@ -171,7 +173,9 @@ final class OrdemServicoController extends Controller
             FinanceiroService::registrarPagamento(
                 (int) $params['id'],
                 (float) $request->input('valor', 0),
-                Auth::id()
+                Auth::id(),
+                $request->string('forma_pagamento') ?: 'dinheiro',
+                $request->string('observacao') ?: null,
             );
         } catch (\Throwable $e) {
             $this->jsonErro($e->getMessage(), 400);

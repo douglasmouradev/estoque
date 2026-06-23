@@ -2,18 +2,23 @@
 
 declare(strict_types=1);
 
+use App\Controllers\AuditController;
 use App\Controllers\AuthController;
 use App\Controllers\BuscaController;
 use App\Controllers\CategoriaController;
 use App\Controllers\ClienteController;
 use App\Controllers\ConfigController;
 use App\Controllers\DashboardController;
+use App\Controllers\FinanceiroController;
 use App\Controllers\FornecedorController;
 use App\Controllers\HealthController;
+use App\Controllers\OpenApiController;
 use App\Controllers\OrcamentoController;
 use App\Controllers\OrdemServicoController;
+use App\Controllers\PasswordResetController;
 use App\Controllers\PecaController;
 use App\Controllers\PortalOrcamentoController;
+use App\Controllers\PortalOsController;
 use App\Controllers\RelatorioController;
 use App\Controllers\SenhaController;
 use App\Controllers\ServicoController;
@@ -26,10 +31,23 @@ $router = new Router();
 $health = new HealthController();
 $router->get('/health', [$health, 'check'], false);
 
+$openapi = new OpenApiController();
+$router->get('/api/openapi.yaml', [$openapi, 'spec'], false);
+$router->get('/api/docs', [$openapi, 'docs']);
+
 $portal = new PortalOrcamentoController();
 $router->get('/portal/orcamento/{token}', [$portal, 'show'], false);
 $router->post('/portal/orcamento/{token}/aprovar', [$portal, 'aprovar'], false);
 $router->post('/portal/orcamento/{token}/reprovar', [$portal, 'reprovar'], false);
+
+$portalOs = new PortalOsController();
+$router->get('/portal/os/{token}', [$portalOs, 'show'], false);
+
+$reset = new PasswordResetController();
+$router->get('/esqueci-senha', [$reset, 'formEsqueci'], false);
+$router->post('/esqueci-senha', [$reset, 'solicitar'], false);
+$router->get('/redefinir-senha', [$reset, 'formRedefinir'], false);
+$router->post('/redefinir-senha', [$reset, 'redefinir'], false);
 
 $senha = new SenhaController();
 $router->get('/trocar-senha', [$senha, 'form']);
@@ -40,6 +58,14 @@ $router->get('/busca', [$busca, 'global']);
 
 $rel = new RelatorioController();
 $router->get('/relatorios', [$rel, 'index']);
+$router->get('/relatorios/exportar', [$rel, 'exportar']);
+
+$fin = new FinanceiroController();
+$router->get('/financeiro', [$fin, 'index']);
+$router->get('/financeiro/exportar', [$fin, 'exportar']);
+
+$audit = new AuditController();
+$router->get('/auditoria', [$audit, 'index']);
 
 $serv = new ServicoController();
 $router->get('/servicos', [$serv, 'index']);

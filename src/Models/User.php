@@ -131,4 +131,47 @@ final class User extends Model
         $stmt->execute(['id' => $id]);
         return (bool) $stmt->fetchColumn();
     }
+
+    public static function criarTokenReset(string $email): ?string
+    {
+        $user = self::findByEmail($email);
+        if ($user === null) {
+            return null;
+        }
+        $token = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $token);
+        self::pdo()->prepare('DELETE FROM password_reset_tokens WHERE user_id = :uid')->execute(['uid' => $user['id']]);
+        self::pdo()->prepare(
+            'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (:uid, :hash, DATE_ADD(NOW(), INTERVAL 1 HOUR))'
+        )->execute(['uid' => $user['id'], 'hash' => $hash]);
+        return $token;
+    }
+
+    public static function validarTokenReset(string $token): ?int
+    {
+        $hash = hash('sha256', $token);
+        $stmt = self::pdo()->prepare(
+            'SELECT user_id FROM password_reset_tokens
+             WHERE token_hash = :hash AND used_at IS NULL AND expires_at > NOW() LIMIT 1'
+        );
+        $stmt->execute(['hash' => $hash]);
+        $uid = $stmt->fetchColumn();
+        return $uid !== false ? (int) $uid : null;
+    }
+
+    public static function redefinirSenhaPorToken(string $token, string $senha): bool
+    {
+        $uid = self::validarTokenReset($token);
+        if ($uid === null) {
+            return false;
+        }
+        $hash = password_hash($senha, PASSWORD_DEFAULT);
+        $pdo = self::pdo();
+        $pdo->prepare('UPDATE users SET password_hash = :h, must_change_password = 0 WHERE id = :id')
+            ->execute(['h' => $hash, 'id' => $uid]);
+        $pdo->prepare(
+            'UPDATE password_reset_tokens SET used_at = NOW() WHERE token_hash = :hash'
+        )->execute(['hash' => hash('sha256', $token)]);
+        return true;
+    }
 }

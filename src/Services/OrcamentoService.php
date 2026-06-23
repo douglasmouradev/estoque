@@ -12,8 +12,6 @@ use App\Models\AuditLog;
 use App\Models\Orcamento;
 use App\Models\OrdemServico;
 use App\Models\ReservaEstoque;
-
-/** Regras de negócio de orçamentos — ponto único para evolução. */
 final class OrcamentoService
 {
     public static function bootListeners(): void
@@ -39,6 +37,24 @@ final class OrcamentoService
         Orcamento::definirToken($id, $token, 30);
         Orcamento::alterarStatus($id, StatusOrcamento::Enviado);
         EventDispatcher::dispatch('orcamento.enviado', ['id' => $id, 'user_id' => $userId, 'token' => $token]);
+
+        $orc = Orcamento::findById($id);
+        $link = self::linkPortal($id);
+        $oficina = \App\Models\Configuracao::oficina();
+        if ($orc && !empty($orc['cliente_email']) && filter_var($orc['cliente_email'], FILTER_VALIDATE_EMAIL)) {
+            $html = MailService::templateOrcamento(
+                (string) $orc['cliente_nome'],
+                (int) $orc['numero'],
+                $link ?? '',
+                $oficina['nome'] ?? 'Oficina'
+            );
+            NotificationService::enfileirarEmail(
+                $orc['cliente_email'],
+                'Orçamento #' . $orc['numero'] . ' — ' . ($oficina['nome'] ?? 'Oficina'),
+                $html
+            );
+            NotificationService::processar(5);
+        }
     }
 
     public static function aprovar(int $id, ?int $userId, ?string $obs = null, bool $viaPortal = false): void

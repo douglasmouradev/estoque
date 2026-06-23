@@ -19,7 +19,7 @@ final class Orcamento extends Model
     public static function findById(int $id): ?array
     {
         $stmt = self::pdo()->prepare(
-            'SELECT ' . self::COLS . ', c.nome AS cliente_nome, v.placa, v.marca, v.modelo
+            'SELECT ' . self::COLS . ', c.nome AS cliente_nome, c.email AS cliente_email, v.placa, v.marca, v.modelo
              FROM orcamentos o
              INNER JOIN clientes c ON c.id = o.cliente_id
              INNER JOIN veiculos v ON v.id = o.veiculo_id
@@ -70,7 +70,7 @@ final class Orcamento extends Model
         $total = (int) $countStmt->fetchColumn();
 
         $sort = $p['sort'] === 'numero' ? 'o.numero' : ($p['sort'] === 'status' ? 'o.status' : 'o.created_at');
-        $sql = 'SELECT ' . self::COLS . ', c.nome AS cliente_nome, v.placa
+        $sql = 'SELECT ' . self::COLS . ', c.nome AS cliente_nome, c.email AS cliente_email, v.placa
                 FROM orcamentos o
                 INNER JOIN clientes c ON c.id = o.cliente_id
                 INNER JOIN veiculos v ON v.id = o.veiculo_id
@@ -237,7 +237,7 @@ final class Orcamento extends Model
     public static function findByToken(string $token): ?array
     {
         $stmt = self::pdo()->prepare(
-            'SELECT ' . self::COLS . ', c.nome AS cliente_nome, v.placa, v.marca, v.modelo
+            'SELECT ' . self::COLS . ', c.nome AS cliente_nome, c.email AS cliente_email, v.placa, v.marca, v.modelo
              FROM orcamentos o
              INNER JOIN clientes c ON c.id = o.cliente_id
              INNER JOIN veiculos v ON v.id = o.veiculo_id

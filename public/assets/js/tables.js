@@ -7,6 +7,7 @@ class DataTable {
         this.mapRow = options.mapRow || null;
         this.emptyCta = options.emptyCta || null;
         this.emptyMessage = options.emptyMessage || 'Nenhum registro encontrado';
+        this.onLoaded = options.onLoaded || null;
         this.state = { page: 1, per_page: 20, sort: options.defaultSort || 'id', dir: 'DESC', q: '' };
         this.bind();
         this.render();

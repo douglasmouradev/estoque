@@ -15,6 +15,7 @@ final class VeiculoController extends Controller
 {
     public function store(Request $request, array $params): void
     {
+        $this->exigeEscrita();
         $dados = [
             'cliente_id' => $request->int('cliente_id'),
             'placa' => $request->string('placa'),
@@ -37,6 +38,7 @@ final class VeiculoController extends Controller
 
     public function update(Request $request, array $params): void
     {
+        $this->exigeEscrita();
         $id = (int) $params['id'];
         $dados = [
             'placa' => $request->string('placa'),
@@ -53,6 +55,7 @@ final class VeiculoController extends Controller
 
     public function destroy(Request $request, array $params): void
     {
+        $this->exigeEscrita();
         Veiculo::softDelete((int) $params['id']);
         $this->jsonOk();
     }

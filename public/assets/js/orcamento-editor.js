@@ -4,6 +4,28 @@
     const id = root.dataset.id;
     let state = {};
 
+    const id = root.dataset.id;
+    let servicosCatalogo = null;
+
+    async function servicos() {
+        if (!servicosCatalogo) servicosCatalogo = (await API.get('/servicos/todos')).dados || [];
+        return servicosCatalogo;
+    }
+
+    function bindServicoAutocomplete(inp) {
+        if (!inp) return;
+        UI.autocomplete(inp, async (q) => {
+            const list = await servicos();
+            return list.filter((s) => s.nome.toLowerCase().includes(q.toLowerCase()))
+                .map((s) => ({ ...s, label: `${s.nome} — ${Format.moeda(s.preco_padrao)}` }));
+        }, (s) => {
+            inp.value = s.nome;
+            const tr = inp.closest('tr');
+            tr.querySelector('[data-f="preco_unitario"]').value = s.preco_padrao;
+            atualizarTotais();
+        });
+    }
+
     async function load() {
         const res = await API.get(`/orcamentos/${id}`);
         state = res.dados;
@@ -89,6 +111,7 @@
             document.getElementById('btn-os')?.addEventListener('click', converterOs);
             root.querySelectorAll('[data-remove]').forEach((b) => b.addEventListener('click', () => { b.closest('tr')?.remove(); atualizarTotais(); atualizarAlertasEstoque(); }));
             root.querySelectorAll('.peca-busca').forEach(bindPecaAutocomplete);
+            root.querySelectorAll('.servico-busca').forEach(bindServicoAutocomplete);
             bindRecalc();
         }
         document.getElementById('btn-pdf-preview')?.addEventListener('click', () => UI.pdfPreview(`/orcamentos/${id}/pdf`, `Orçamento #${o.numero || id}`));
@@ -111,7 +134,7 @@
         const alerta = it.tipo === 'peca' && it.peca_id && parseFloat(it.quantidade) > parseFloat(estoque || 0);
         return `<tr data-i="${i}" data-estoque="${estoque}" data-tipo="${it.tipo}">
             <td>${it.tipo}</td>
-            <td>${it.tipo === 'peca' ? `<input class="input peca-busca" data-f="descricao" value="${escapeHtml(it.descricao)}" ${editavel ? '' : 'readonly'}>` : `<input class="input" data-f="descricao" value="${escapeHtml(it.descricao)}" ${editavel ? '' : 'readonly'}>`}
+            <td>${it.tipo === 'peca' ? `<input class="input peca-busca" data-f="descricao" value="${escapeHtml(it.descricao)}" ${editavel ? '' : 'readonly'}>` : `<input class="input servico-busca" data-f="descricao" value="${escapeHtml(it.descricao)}" ${editavel ? '' : 'readonly'}>`}
                 <input type="hidden" data-f="tipo" value="${it.tipo}">
                 <input type="hidden" data-f="peca_id" value="${it.peca_id || ''}"></td>
             <td><input type="number" step="0.001" class="input input-qtd" data-f="quantidade" value="${it.quantidade}" style="width:80px" ${editavel ? '' : 'readonly'}></td>
@@ -129,6 +152,7 @@
         tbody.appendChild(tr);
         tr.querySelector('[data-remove]')?.addEventListener('click', () => { tr.remove(); atualizarTotais(); atualizarAlertasEstoque(); });
         if (tipo === 'peca') bindPecaAutocomplete(tr.querySelector('.peca-busca'));
+        else bindServicoAutocomplete(tr.querySelector('.servico-busca'));
         bindRecalcRow(tr);
     }
 

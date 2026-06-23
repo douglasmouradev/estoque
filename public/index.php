@@ -16,7 +16,7 @@ SecurityHeaders::apply();
 
 $request = Request::capture();
 
-$csrfLivre = in_array($request->path, ['/login'], true)
+$csrfLivre = in_array($request->path, ['/login', '/esqueci-senha', '/redefinir-senha'], true)
     || str_starts_with($request->path, '/portal/');
 if (!$csrfLivre && in_array($request->method, ['POST', 'PUT', 'DELETE'], true)) {
     if (!\App\Core\Csrf::validateRequest($request)) {

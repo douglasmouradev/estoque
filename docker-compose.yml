@@ -4,9 +4,10 @@ services:
     ports:
       - "8080:80"
     environment:
-      APP_ENV: local
-      APP_DEBUG: "true"
-      APP_AUTO_CREATE_DB: "true"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_AUTO_CREATE_DB: "false"
+      MAIL_DRIVER: log
       DB_HOST: db
       DB_PORT: 3306
       DB_DATABASE: oficina_estoque

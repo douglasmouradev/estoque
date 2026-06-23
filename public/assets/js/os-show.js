@@ -28,6 +28,12 @@
             <button type="button" id="btn-pdf-preview" class="btn btn-ghost">Visualizar PDF</button>
             <a href="/os/${id}/pdf" class="btn btn-ghost" target="_blank" rel="noopener">Baixar PDF</a>
         </div>
+        ${o.link_portal ? `
+        <div class="card portal-link">
+            <span class="muted">Link para o cliente acompanhar a OS:</span>
+            <input type="text" class="input" id="link-os-portal" readonly value="${escapeHtml(o.link_portal)}">
+            <button type="button" class="btn btn-sm" id="btn-copiar-os-link">Copiar</button>
+        </div>` : ''}
         <p class="muted">${escapeHtml(o.cliente_nome)} · ${escapeHtml(o.placa)} · ${escapeHtml(o.marca)} ${escapeHtml(o.modelo)}</p>
         <div class="card">
             <h3>Itens <small class="muted">(marque concluído para baixa na finalização)</small></h3>
@@ -59,10 +65,20 @@
             <h3>Financeiro</h3>
             <p class="muted">Total: <strong>${Format.moeda(totalOs)}</strong> · Pago: <strong>${Format.moeda(pagoOs)}</strong> · Status: <strong>${escapeHtml(o.status_pagamento || 'pendente')}</strong></p>
             ${podeFin && saldoOs > 0 ? `
-            <form id="form-pagamento" class="toolbar btn-write" style="margin-top:0.75rem">
-                <input type="number" step="0.01" name="valor" class="input" min="0.01" max="${saldoOs}" value="${saldoOs}" style="width:140px">
+            <form id="form-pagamento" class="toolbar btn-write" style="margin-top:0.75rem;flex-wrap:wrap">
+                <input type="number" step="0.01" name="valor" class="input" min="0.01" max="${saldoOs}" value="${saldoOs}" style="width:120px">
+                <select name="forma_pagamento" class="input" style="width:auto">
+                    <option value="pix">PIX</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="cartao_credito">Cartão crédito</option>
+                    <option value="cartao_debito">Cartão débito</option>
+                    <option value="transferencia">Transferência</option>
+                    <option value="outro">Outro</option>
+                </select>
                 <button type="submit" class="btn btn-primary">Registrar pagamento</button>
             </form>` : (saldoOs <= 0 ? '<p class="muted" style="color:var(--success)">Quitada</p>' : '')}
+            ${(o.pagamentos || []).length ? `<ul style="margin-top:0.75rem;font-size:0.85rem">${(o.pagamentos || []).map((p) =>
+                `<li>${Format.dataHora(p.created_at)} — ${Format.moeda(p.valor)} (${escapeHtml(p.forma_pagamento)})</li>`).join('')}</ul>` : ''}
         </div>` : ''}
         <div class="card"><h3>Checklist</h3>
         <form id="form-check" class="toolbar btn-write"><input name="descricao" class="input" placeholder="Novo item" required><button class="btn">+</button></form>
@@ -97,6 +113,12 @@
             load();
         });
         document.getElementById('btn-pdf-preview')?.addEventListener('click', () => UI.pdfPreview(`/os/${id}/pdf`, `OS #${o.numero}`));
+        document.getElementById('btn-copiar-os-link')?.addEventListener('click', async () => {
+            const inp = document.getElementById('link-os-portal');
+            if (!inp?.value) return;
+            try { await navigator.clipboard.writeText(inp.value); Toast.success('Link copiado'); }
+            catch (_) { inp.select(); document.execCommand('copy'); Toast.success('Link copiado'); }
+        });
         root.querySelectorAll('[data-item]').forEach((cb) => {
             cb.addEventListener('change', () => API.post(`/os/${id}/itens/${cb.dataset.item}/toggle`, { concluido: cb.checked }));
         });
@@ -131,7 +153,10 @@
         if (podeEditarItens) {
             const descInp = document.getElementById('item-desc');
             const tipoSel = document.getElementById('item-tipo');
+            let servicosCache = null;
             const bindPeca = () => {
+                descInp.classList.add('peca-busca');
+                descInp.classList.remove('servico-busca');
                 UI.autocomplete(descInp, async (q) => {
                     const r = await API.get(`/estoque/autocomplete?q=${encodeURIComponent(q)}`);
                     return (r.dados || []).map((p) => ({
@@ -144,10 +169,25 @@
                     document.getElementById('item-preco').value = p.preco_venda;
                 });
             };
+            const bindServico = () => {
+                descInp.classList.remove('peca-busca');
+                descInp.classList.add('servico-busca');
+                document.getElementById('item-peca-id').value = '';
+                UI.autocomplete(descInp, async (q) => {
+                    if (!servicosCache) servicosCache = (await API.get('/servicos/todos')).dados || [];
+                    return servicosCache
+                        .filter((s) => s.nome.toLowerCase().includes(q.toLowerCase()))
+                        .map((s) => ({ ...s, label: `${s.nome} — ${Format.moeda(s.preco_padrao)}` }));
+                }, (s) => {
+                    descInp.value = s.nome;
+                    document.getElementById('item-preco').value = s.preco_padrao;
+                });
+            };
             bindPeca();
             tipoSel?.addEventListener('change', () => {
                 document.getElementById('item-peca-id').value = '';
                 if (tipoSel.value === 'peca') bindPeca();
+                else bindServico();
             });
             document.getElementById('btn-add-item')?.addEventListener('click', async () => {
                 const tipo = tipoSel.value;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\IpRateLimiter;
 use App\Core\Request;
 use App\Enums\StatusOrcamento;
 use App\Services\OrcamentoService;
@@ -27,6 +28,9 @@ final class PortalOrcamentoController extends Controller
 
     public function aprovar(Request $request, array $params): void
     {
+        if (IpRateLimiter::tooMany('portal_aprovar_' . ($params['token'] ?? ''), 10, 3600)) {
+            $this->jsonErro('Muitas tentativas. Aguarde.', 429);
+        }
         $orc = OrcamentoService::porToken($params['token'] ?? '');
         if ($orc === null || $orc['status'] !== StatusOrcamento::Enviado->value) {
             $this->jsonErro('Orçamento indisponível para aprovação.', 400);

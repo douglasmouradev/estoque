@@ -15,6 +15,7 @@ final class OrdemServico extends Model
 {
     private const COLS = 'os.id, os.numero, os.orcamento_id, os.cliente_id, os.veiculo_id, os.status,
         os.observacoes, os.valor_total, os.valor_pago, os.status_pagamento,
+        os.token_acesso, os.token_expira_em,
         os.finalizada_em, os.created_at, os.updated_at';
 
     public static function findById(int $id): ?array
@@ -28,6 +29,49 @@ final class OrdemServico extends Model
         );
         $stmt->execute(['id' => $id]);
         return $stmt->fetch() ?: null;
+    }
+
+    public static function findByToken(string $token): ?array
+    {
+        if ($token === '') {
+            return null;
+        }
+        $stmt = self::pdo()->prepare(
+            'SELECT ' . self::COLS . ', c.nome AS cliente_nome, v.placa, v.marca, v.modelo
+             FROM ordens_servico os
+             INNER JOIN clientes c ON c.id = os.cliente_id
+             INNER JOIN veiculos v ON v.id = os.veiculo_id
+             WHERE os.token_acesso = :t AND (os.token_expira_em IS NULL OR os.token_expira_em > NOW())
+             LIMIT 1'
+        );
+        $stmt->execute(['t' => $token]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public static function definirTokenPortal(int $osId): string
+    {
+        $token = bin2hex(random_bytes(24));
+        self::pdo()->prepare(
+            'UPDATE ordens_servico SET token_acesso = :t, token_expira_em = DATE_ADD(NOW(), INTERVAL 90 DAY) WHERE id = :id'
+        )->execute(['t' => $token, 'id' => $osId]);
+        return $token;
+    }
+
+    public static function linkPortal(int $osId): ?string
+    {
+        $os = self::findById($osId);
+        if ($os === null) {
+            return null;
+        }
+        if (empty($os['token_acesso'])) {
+            self::definirTokenPortal($osId);
+            $os = self::findById($osId);
+        }
+        if (empty($os['token_acesso'])) {
+            return null;
+        }
+        $base = rtrim((require dirname(__DIR__, 2) . '/config/app.php')['url'], '/');
+        return $base . '/portal/os/' . $os['token_acesso'];
     }
 
     public static function proximoNumero(): int
@@ -81,6 +125,8 @@ final class OrdemServico extends Model
             Orcamento::alterarStatus($orcamentoId, StatusOrcamento::Convertido);
 
             $pdo->commit();
+            self::definirTokenPortal($osId);
+            FinanceiroService::atualizarTotal($osId);
             return $osId;
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -327,7 +373,9 @@ final class OrdemServico extends Model
             'status' => StatusOrdemServico::Aberta->value,
             'uid' => $userId,
         ]);
-        return (int) self::pdo()->lastInsertId();
+        $osId = (int) self::pdo()->lastInsertId();
+        self::definirTokenPortal($osId);
+        return $osId;
     }
 
     /** @param array<string, mixed> $query */

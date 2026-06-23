@@ -40,6 +40,10 @@ $navLabels = [
 
     'relatorios' => 'Relatórios',
 
+    'financeiro' => 'Financeiro',
+
+    'auditoria' => 'Auditoria',
+
     'servicos' => 'Serviços',
 
     'busca' => 'Busca',
@@ -107,6 +111,10 @@ $pageSubtitle = $subtitulo ?? 'Gestão de estoque, orçamentos e ordens de servi
     <title><?= htmlspecialchars($titulo ?? 'Oficina') ?> — Estoque</title>
 
     <?php require __DIR__ . '/partials/favicon.php'; ?>
+
+    <link rel="manifest" href="<?= htmlspecialchars($asset('manifest.json')) ?>">
+
+    <meta name="theme-color" content="#1e3a5f">
 
     <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken) ?>">
 
@@ -222,6 +230,30 @@ $pageSubtitle = $subtitulo ?? 'Gestão de estoque, orçamentos e ordens de servi
 
                 <?php endif; ?>
 
+                <?php if (\App\Core\Auth::canAccessPath('/financeiro')): ?>
+
+                <a href="/financeiro" class="nav-link<?= $navActive('/financeiro') ?>">
+
+                    <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+
+                    <span>Financeiro</span>
+
+                </a>
+
+                <?php endif; ?>
+
+                <?php if (\App\Core\Auth::canAccessPath('/auditoria')): ?>
+
+                <a href="/auditoria" class="nav-link<?= $navActive('/auditoria') ?>">
+
+                    <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+
+                    <span>Auditoria</span>
+
+                </a>
+
+                <?php endif; ?>
+
                 <?php if ($podeEscrever): ?>
 
                 <a href="/servicos" class="nav-link<?= $navActive('/servicos') ?>">
@@ -261,6 +293,14 @@ $pageSubtitle = $subtitulo ?? 'Gestão de estoque, orçamentos e ordens de servi
                     <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
 
                     <span>Configurações</span>
+
+                </a>
+
+                <a href="/api/docs" class="nav-link<?= $navActive('/api') ?>" target="_blank" rel="noopener">
+
+                    <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+
+                    <span>API Docs</span>
 
                 </a>
 

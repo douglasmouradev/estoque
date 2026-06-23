@@ -9,6 +9,10 @@ config/database.local.php
 !/storage/pdfs/.gitkeep
 /storage/logs/*
 !/storage/logs/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/rate_limit/*
+!/storage/rate_limit/.gitkeep
 composer.phar
 composer-setup.php
 .phpunit.result.cache
